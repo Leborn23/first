@@ -8,7 +8,7 @@
     :root{ --brand:#e91e63; }
     html,body{height:100%}
     body{
-      margin:0; padding:20px; text-align:center; color:#222; -webkit-tap-highlight-color: transparent;
+      margin:0; padding: calc(20px + env(safe-area-inset-top)) 20px calc(16px + env(safe-area-inset-bottom)) 20px; min-height: 100dvh; text-align:center; color:#222; -webkit-tap-highlight-color: transparent;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, KaiTi, "楷体", "Noto Serif SC", "Source Han Serif SC", serif;
       background: linear-gradient(120deg,#ffe1e7,#fff2cc,#d8e8ff,#e9d7ff,#ffe9d6,#e3f9e5);
       background-size: 400% 400%; animation:bgShift 22s ease infinite;
@@ -81,15 +81,18 @@
     }
 
     function createPopup(x,y,life){
+      const vp = (window.visualViewport||{width:window.innerWidth, height:window.innerHeight});
+      const w = vp.width, h = vp.height;
       const el=document.createElement('div');
       el.className='blessing-popup';
       el.style.background = randomCardBG();
       el.textContent = personalize(pick(BLESSINGS));
-      const w=window.innerWidth, h=window.innerHeight;
       const cw = Math.max(160, Math.min(240, Math.floor(w*0.45)));
       const ch = Math.max(80,  Math.min(110, Math.floor(w*0.22)));
-      const left = (typeof x==='number')?x:Math.max(0, Math.floor(Math.random()*(w-cw)));
-      const top  = (typeof y==='number')?y:Math.max(0, Math.floor(Math.random()*(h-ch)));
+      let left = (typeof x==='number')?x:Math.floor(Math.random()*(w-cw));
+      let top  = (typeof y==='number')?y:Math.floor(Math.random()*(h-ch));
+      left = Math.max(0, Math.min(left, w - cw));
+      top  = Math.max(0, Math.min(top , h - ch));
       el.style.left=left+'px';
       el.style.top =top +'px';
       document.body.appendChild(el);
@@ -99,13 +102,27 @@
 
     // 心形围字（驻留） — 适配小屏，点位略加密
     function heartPositions(n){
-      const pts=[]; const W=window.innerWidth, H=window.innerHeight; const scale=Math.min(W,H)/28; const cx=W/2-0.5*(Math.max(160,Math.min(240,Math.floor(W*0.45)))); const cy=H/2-40;
+      const vp = (window.visualViewport||{width:window.innerWidth, height:window.innerHeight});
+      const W = vp.width, H = vp.height;
+      const pts=[];
+      const cw = Math.max(160, Math.min(240, Math.floor(W*0.45)));
+      const ch = Math.max(80,  Math.min(110, Math.floor(W*0.22)));
+      const margin = 12;
+      const scaleX = (W - cw - 2*margin) / 32; // heart x extent ~ [-16,16]
+      const scaleY = (H - ch - 2*margin) / 34; // heart y total span ~ 34
+      const scale = Math.max(6, Math.min(scaleX, scaleY)) * 0.95;
+      const cx = (W - cw)/2;
+      const cy = (H - ch)/2;
       for(let i=0;i<n;i++){
         const t=Math.PI*2*(i/n);
         const x=16*Math.sin(t)**3;
         const y=13*Math.cos(t)-5*Math.cos(2*t)-2*Math.cos(3*t)-Math.cos(4*t);
-        pts.push([cx + x*scale, cy - y*scale]);
+        const px = cx + x*scale;
+        const py = cy - y*scale;
+        pts.push([px, py]);
       }
+      return pts;
+    }
       return pts;
     }
     function startHeart(){
@@ -118,7 +135,7 @@
     function spawnFalling(){
       const s=document.createElement('span'); s.className='falling';
       s.textContent='❤ '+personalize(pick(BLESSINGS));
-      s.style.left=Math.floor(Math.random()*(window.innerWidth-120))+'px';
+      s.style.left=Math.floor(Math.random()*(( (window.visualViewport?window.visualViewport.width:window.innerWidth) - 120 )))+'px';
       s.style.color=pick(COLORS);
       s.style.animationDuration=(7+Math.random()*5)+'s';
       document.body.appendChild(s);
