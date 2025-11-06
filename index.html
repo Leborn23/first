@@ -126,8 +126,14 @@
       return pts;
     }
     function startHeart(){
-      const pts=heartPositions(130);
-      pts.forEach((p,i)=> setTimeout(()=> createPopup(p[0],p[1], -1), i*30));
+      // 改为：随机弹窗爆发（无爱心围字）
+      const vp = (window.visualViewport||{width:window.innerWidth, height:window.innerHeight});
+      const area = vp.width * vp.height;
+      const count = Math.max(80, Math.min(200, Math.floor(area/10000))); // 依屏幕面积自适应数量
+      const gap = 28; // 每个弹窗间隔（毫秒）
+      for(let i=0;i<count;i++){
+        setTimeout(()=> createPopup(undefined, undefined, 6000 + Math.floor(Math.random()*3000)), i*gap);
+      }
     }
 
     // 飘落弹幕（轻量，移动端上限更低）
