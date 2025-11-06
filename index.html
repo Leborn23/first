@@ -1,168 +1,147 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>祝福张三</title>
-    <style>
-        body {
-            background-color: #f0f8ff;
-            font-family: KaiTi, "楷体", serif;
-            text-align: center;
-            margin: 0;
-            padding: 20px;
-        }
-        
-        h1 {
-            color: #e91e63;
-            font-size: 28px;
-            margin-top: 50px;
-        }
-        
-        .button-container {
-            margin: 30px 0;
-        }
-        
-        button {
-            background-color: #e91e63;
-            color: white;
-            border: none;
-            border-radius: 30px;
-            font-size: 18px;
-            padding: 10px 25px;
-            margin: 0 10px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-family: KaiTi, "楷体", serif;
-        }
-        
-        button:hover {
-            transform: scale(1.05);
-            opacity: 0.9;
-        }
-        
-        button:disabled {
-            background-color: #cccccc;
-            cursor: not-allowed;
-            transform: none;
-            opacity: 1;
-        }
-        
-        .blessing-popup {
-            position: fixed;
-            width: 220px;
-            height: 100px;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #333;
-            font-size: 16px;
-            animation: popIn 0.5s ease-out forwards;
-            pointer-events: none;
-        }
-        
-        @keyframes popIn {
-            from {
-                transform: scale(0);
-            }
-            to {
-                transform: scale(1);
-            }
-        }
-    </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>祝福 SJL · 一键开启</title>
+  <style>
+    /* —— 背景：柔和多彩渐变（动画） —— */
+    html,body{height:100%}
+    body{
+      margin:0; padding:32px; text-align:center; color:#222;
+      font-family:KaiTi,"楷体",STKaiti,"Noto Serif SC",serif;
+      background: linear-gradient(115deg,#ffe1e7,#fff2cc,#d8e8ff,#e9d7ff,#ffe9d6,#e3f9e5);
+      background-size: 400% 400%;
+      animation:bgShift 22s ease infinite;
+      position:relative; overflow:hidden;
+    }
+    @keyframes bgShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+    /* 背景点缀：柔焦彩球 */
+    .blob{position:absolute; border-radius:50%; filter:blur(18px); opacity:.35; pointer-events:none}
+    .b1{width:180px;height:180px;left:5%;top:8%;background:#ff9abb}
+    .b2{width:220px;height:220px;right:8%;top:10%;background:#9ad1ff}
+    .b3{width:160px;height:160px;left:12%;bottom:12%;background:#ffd29a}
+    .b4{width:240px;height:240px;right:10%;bottom:6%;background:#c7ffb0}
+
+    h1{color:#e91e63;font-size:28px;margin:10px 0 22px;text-shadow:0 2px 10px rgba(233,30,99,.15)}
+    button{
+      background:#e91e63; color:#fff; border:0; border-radius:999px; cursor:pointer;
+      padding:12px 26px; font-size:18px; letter-spacing:1px;
+      box-shadow:0 10px 24px rgba(233,30,99,.28);
+      transition:transform .15s ease, box-shadow .2s ease, opacity .2s ease;
+    }
+    button:hover{transform:translateY(-1px); box-shadow:0 12px 28px rgba(233,30,99,.32)}
+    button:disabled{opacity:.7; cursor:not-allowed}
+
+    /* 弹窗卡片 */
+    .blessing-popup{position:fixed;width:230px;height:108px;display:flex;align-items:center;justify-content:center;text-align:center;border-radius:14px;box-shadow:0 10px 26px rgba(0,0,0,.18);color:#2a2a2a;left:0;top:0;pointer-events:none;opacity:0;transform:scale(.85);animation:pop .32s ease-out forwards;padding:10px}
+    @keyframes pop{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:scale(1)}}
+
+    /* 飘落弹幕 */
+    .falling{position:fixed;left:0;top:-40px;white-space:nowrap;font-size:16px;pointer-events:none;text-shadow:0 2px 8px rgba(0,0,0,.2);animation:fall linear forwards}
+    @keyframes fall{from{transform:translateY(-60px)}to{transform:translateY(110vh)}}
+  </style>
 </head>
 <body>
-    <h1>点击开始接收祝福吧！</h1>
-    <div class="button-container">
-        <button id="startBtn">开启祝福</button>
-        <button id="closeBtn">关闭所有</button>
-    </div>
+  <!-- 背景柔焦彩球 -->
+  <div class="blob b1"></div>
+  <div class="blob b2"></div>
+  <div class="blob b3"></div>
+  <div class="blob b4"></div>
 
-    <script>
-        // 背景颜色列表
-        const bgColors = [
-            '#ffc0cb', '#ffb6c1', '#ff69b4', '#ff1493', '#db7093', 
-            '#bc8f8f', '#c71585', '#ffa07a', '#ff7f50', '#ffa500', 
-            '#ffffe0', '#e6e6fa', '#d8bfd8', '#dda0dd', '#ee82ee'
-        ];
-        
-        // 祝福语句列表
-        const blessings = [
-            '张三，祝你万事如意！',
-            '愿你天天开心，张三！',
-            '张三，前程似锦！',
-            '祝你幸福快乐，张三！',
-            '张三，心想事成！',
-            '愿你平安健康，张三！',
-            '张三，好运连连！',
-            '祝你笑口常开，张三！',
-            '张三，美梦成真！',
-            '愿你事事顺利，张三！'
-        ];
-        
-        const startBtn = document.getElementById('startBtn');
-        const closeBtn = document.getElementById('closeBtn');
-        
-        // 开启祝福按钮点击事件
-        startBtn.addEventListener('click', () => {
-            // 禁用按钮
-            startBtn.disabled = true;
-            
-            // 生成100个随机弹窗，间隔50ms
-            for (let i = 0; i < 100; i++) {
-                setTimeout(() => {
-                    createPopup();
-                }, i * 50);
-            }
-            
-            // 5秒后恢复按钮
-            setTimeout(() => {
-                startBtn.disabled = false;
-            }, 5000);
-        });
-        
-        // 关闭所有按钮点击事件
-        closeBtn.addEventListener('click', () => {
-            const popups = document.querySelectorAll('.blessing-popup');
-            popups.forEach(popup => popup.remove());
-        });
-        
-        // 创建弹窗函数
-        function createPopup() {
-            const popup = document.createElement('div');
-            popup.className = 'blessing-popup';
-            
-            // 随机背景色
-            const randomColor = bgColors[Math.floor(Math.random() * bgColors.length)];
-            popup.style.backgroundColor = randomColor;
-            
-            // 随机祝福语句
-            const randomBlessing = blessings[Math.floor(Math.random() * blessings.length)];
-            popup.textContent = randomBlessing;
-            
-            // 随机位置（确保弹窗在可视区域内）
-            const maxLeft = window.innerWidth - 220;
-            const maxTop = window.innerHeight - 100;
-            const left = Math.floor(Math.random() * maxLeft);
-            const top = Math.floor(Math.random() * maxTop);
-            
-            popup.style.left = `${left}px`;
-            popup.style.top = `${top}px`;
-            
-            // 添加到页面
-            document.body.appendChild(popup);
-            
-            // 3秒后自动移除弹窗
-            setTimeout(() => {
-                popup.style.opacity = '0';
-                popup.style.transform = 'scale(0)';
-                popup.style.transition = 'all 0.5s ease';
-                setTimeout(() => popup.remove(), 500);
-            }, 3000);
-        }
-    </script>
+  <h1>点击开始接收祝福吧！</h1>
+  <button id="startBtn">开启祝福</button>
+
+  <noscript>请开启浏览器的 JavaScript</noscript>
+
+  <script>
+  (function(){
+    'use strict';
+    // 固定姓名
+    var NAME='SJL';
+    // 更丰富的颜色池
+    var COLORS=['#ffc0cb','#ffb6c1','#ff69b4','#ff1493','#db7093','#c71585','#ffa07a','#ff7f50','#ffa500','#ffd166','#b5e48c','#6ee7b7','#9bf6ff','#a0c4ff','#bdb2ff','#ffadad','#ffd6a5','#fdffb6','#caffbf','#9bf6ff','#a0e7e5','#b2f7ef','#c6d0f5','#f4b6c2'];
+    var BLESSINGS=[
+      '{name}，祝你万事如意！','愿你天天开心，{name}！','{name}，前程似锦！','祝你幸福快乐，{name}！','{name}，心想事成！','愿你平安健康，{name}！','{name}，好运连连！','祝你笑口常开，{name}！','{name}，美梦成真！','愿你事事顺利，{name}！','{name}，一切顺利如你所愿！','愿好运常伴你左右，{name}！','{name}，前路有光，所愿皆成！','愿所有美好如约而至，{name}！'
+    ];
+    function personalize(t){return t.replace(/\{name\}/g, NAME)}
+    function pick(arr){return arr[Math.floor(Math.random()*arr.length)]}
+
+    // 生成柔和渐变卡片背景
+    function randomCardBG(){
+      var c1=pick(COLORS), c2=pick(COLORS), c3=pick(COLORS);
+      return 'linear-gradient(135deg,'+c1+','+c2+','+c3+')';
+    }
+
+    // 创建弹窗卡片（life=-1 为驻留）
+    function createPopup(x,y,life){
+      var el=document.createElement('div');
+      el.className='blessing-popup';
+      el.style.background= randomCardBG();
+      el.textContent=personalize(pick(BLESSINGS));
+      var w=window.innerWidth, h=window.innerHeight;
+      var cw=230, ch=108; // 与CSS同步
+      var left=(typeof x==='number')?x:Math.max(0, Math.floor(Math.random()*(w-cw)));
+      var top=(typeof y==='number')?y:Math.max(0, Math.floor(Math.random()*(h-ch)));
+      el.style.left=left+'px';
+      el.style.top=top+'px';
+      document.body.appendChild(el);
+      if(life===-1) return;
+      setTimeout(function(){ el.style.opacity='0'; el.style.transform='scale(.8)'; el.style.transition='all .45s ease'; setTimeout(function(){ if(el&&el.parentNode) el.parentNode.removeChild(el); }, 460); }, (typeof life==='number'?life:3000));
+    }
+
+    // 心形围字（驻留）
+    function heartPositions(n){
+      var pts=[]; var W=window.innerWidth, H=window.innerHeight; var scale=Math.min(W,H)/30; var cx=W/2-115, cy=H/2-64;
+      for(var i=0;i<n;i++){
+        var t=Math.PI*2*(i/n);
+        var x=16*Math.pow(Math.sin(t),3);
+        var y=13*Math.cos(t)-5*Math.cos(2*t)-2*Math.cos(3*t)-Math.cos(4*t);
+        pts.push([cx+x*scale, cy-y*scale]);
+      }
+      return pts;
+    }
+    function startHeart(){
+      var pts=heartPositions(150);
+      pts.forEach(function(p,idx){ setTimeout(function(){ createPopup(p[0],p[1], -1) }, idx*35); });
+    }
+
+    // 飘落弹幕（持续）
+    var barrageTimer=null; var fallingLimit=180;
+    function spawnFalling(){
+      var s=document.createElement('span');
+      s.className='falling';
+      s.textContent='❤ '+personalize(pick(BLESSINGS));
+      s.style.left=Math.floor(Math.random()*(window.innerWidth-140))+'px';
+      s.style.color=pick(COLORS);
+      s.style.fontSize=(14+Math.floor(Math.random()*10))+'px';
+      s.style.animationDuration=(6+Math.random()*6)+'s';
+      document.body.appendChild(s);
+      s.addEventListener('animationend', function(){ if(s&&s.parentNode) s.parentNode.removeChild(s); });
+    }
+    function startBarrage(){
+      if(barrageTimer) return;
+      barrageTimer=setInterval(function(){ if(document.querySelectorAll('.falling').length<fallingLimit){ for(var i=0;i<3;i++) spawnFalling(); } }, 700);
+    }
+
+    // 一键开启：同时启动心形 + 弹幕
+    var started=false;
+    document.getElementById('startBtn').addEventListener('click', function(){
+      if(started) return; // 防止重复开启
+      started=true; this.disabled=true; // 只保留“开启祝福”字样，不改文案
+      startHeart();
+      startBarrage();
+    });
+
+    // 隐藏功能：按 Esc 清屏（无 UI 按钮，纯辅助）
+    window.addEventListener('keydown', function(e){
+      if(e.key==='Escape'){
+        document.querySelectorAll('.blessing-popup,.falling').forEach(function(n){ if(n&&n.parentNode) n.parentNode.removeChild(n); });
+        if(barrageTimer){ clearInterval(barrageTimer); barrageTimer=null; }
+        started=false; var btn=document.getElementById('startBtn'); if(btn) btn.disabled=false;
+      }
+    });
+  })();
+  </script>
 </body>
-
 </html>
